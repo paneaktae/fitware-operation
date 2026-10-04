@@ -2,7 +2,7 @@
 
 An inventory-first operating workspace for a single used commercial gym equipment business. This is a working full-stack V1, with a verified local demo. It is not a multi-tenant SaaS.
 
-**Delivery status:** local PostgreSQL migration, demo seed, application, automated tests, browser workflow and production build are available. A GitHub remote and Vercel deployment have **not** been created. Live OpenAI and Meta requests have **not** been tested with business credentials. Review the limitations below before using real ad spend.
+**Delivery status:** local PostgreSQL migration, demo seed, application, automated tests, browser workflow and production build are available. Source is published at [paneaktae/fitware-operation](https://github.com/paneaktae/fitware-operation), and GitHub Actions validation passed. A Vercel deployment has **not** been created. Live OpenAI and Meta requests have **not** been tested with business credentials. Review the limitations below before using real ad spend.
 
 ## What is implemented
 
@@ -206,7 +206,7 @@ The last three direct pages were unavailable to the research tool; consult them 
 
 ### Metric sync
 
-Settings offers manual sync. `vercel.json` calls `/api/cron/sync` hourly and the endpoint requires `Authorization: Bearer <CRON_SECRET>`. Set the same variable in Vercel so its cron service supplies the header. Hourly cron requires a Vercel plan that permits that schedule; adjust to your plan or use an external authenticated scheduler.
+Settings offers manual sync. `vercel.json` calls `/api/cron/sync` daily at 00:15 UTC (07:15 Bangkok) and the endpoint requires `Authorization: Bearer <CRON_SECRET>`. Set the same variable in Vercel so its cron service supplies the header. The daily schedule supports the connected Hobby plan. For more frequent sync, use manual sync or configure a scheduler/plan that supports the desired interval. Scheduled execution time is approximate.
 
 The sync fetches a rolling 30-day attribution window, paginates through cursors, and upserts historical campaign/date snapshots. A database lease prevents concurrent sync runs. Failures retain the last successful data and show a retryable integration error.
 
@@ -242,14 +242,14 @@ npm run test:browser
 
 The browser test creates clearly named verification records. Run `npm run test:cleanup` after it to remove only those fixtures. Screenshots and the report are written to ignored `test-results/`. `BROWSER_EXECUTABLE` optionally selects another installed browser. Do not run demo browser tests against a live business deployment.
 
-The GitHub Actions workflow provisions a PostgreSQL service, runs migrations and seed, then lint, typecheck, tests and production build. It has not run on GitHub because no accessible remote repository is connected.
+The GitHub Actions workflow provisions a PostgreSQL service, runs migrations and seed, then lint, typecheck, tests and production build. It passed on GitHub for commit `74f470e`: [validation run](https://github.com/paneaktae/fitware-operation/actions/runs/37226173344).
 
 ## GitHub and Vercel deployment
 
-A local Git repository is initialized with a lockfile, CI, migration and ignored secrets. To publish, authorize the GitHub connector for the intended repository or use an authenticated Git client, create a **private** repository, and push this directory. Do not push the surrounding synced ChatGPT project or `.data`.
+The app is published on branch `main` in the user-provided [GitHub repository](https://github.com/paneaktae/fitware-operation). The repository contains this application at its root, including the lockfile, CI and migrations. Secrets, local data and the surrounding synced ChatGPT project are excluded.
 
 1. Provision a dedicated managed PostgreSQL database (for example, a Vercel Marketplace provider) and Vercel Blob storage.
-2. Import the repository as a Next.js project. If this folder is nested in another repository, set Root Directory to `fitware`.
+2. Import the repository as a Next.js project. For the published repository, use the repository root (leave Root Directory unset).
 3. Use Node 24 and `npm ci`; the build is `npm run build`.
 4. Set the required environment variables separately for preview and production. Keep their databases and secrets separate.
 5. Apply `npm run db:migrate` against the target database as a release step. Then run `npm run db:seed` with `DEMO_MODE=false` and your administrator credentials to provision the administrator only.
@@ -260,7 +260,7 @@ A local Git repository is initialized with a lockfile, CI, migration and ignored
 
 For another host, the included Dockerfile builds the same Next.js app. It needs external PostgreSQL and durable media storage. It never embeds the local `.env`.
 
-**Current external blockers:** GitHub reports zero installed accessible accounts/repositories. Vercel project listing works, but integration configuration access returns 403. There is no hosted database connection supplied. Consequently no repository was pushed and no broken/empty hosted app was published.
+**Current external blockers:** Git push succeeded using the authenticated local Git client. Vercel project creation returns `repo_not_found` for this repository, although the connected Vercel team has other repositories under the same GitHub owner. Check the Vercel GitHub App repository access at [GitHub installations](https://github.com/settings/installations) and include `fitware-operation`. Vercel integration configuration access also returns 403, and no hosted database connection is configured. No hosted deployment has been created.
 
 ## Security and known limitations
 

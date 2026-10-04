@@ -54,8 +54,12 @@ Mocked Meta tests verify PAUSED campaign/ad-set/ad payloads, integer satang budg
 
 ## Limits of verification
 
-No live OpenAI calls, Meta advertising changes, Meta acceptance/permissions validation, hosted Vercel Blob operations, remote PostgreSQL connections, GitHub workflow runs, or Vercel deployments were executed. Those require the owner's credentials and connected repository/database permissions.
+No live OpenAI calls, Meta advertising changes, Meta acceptance/permissions validation, hosted Vercel Blob operations, remote production PostgreSQL connections or Vercel deployments were executed. Those require the owner's credentials and connected repository/database permissions.
 
 Direct Meta developer pages could not be fetched by the research tool. Meta's official Postman collection was checked; the API version remains an explicit required configuration rather than an unverified hardcoded guess.
 
 Full screenshots and machine-readable browser results are in the ignored local `test-results/` directory. The development app remains available at http://127.0.0.1:3000 while its server and local PostgreSQL process are running.
+
+## GitHub delivery
+
+Source was pushed to `paneaktae/fitware-operation` on `main`. [GitHub Actions run 37226173344](https://github.com/paneaktae/fitware-operation/actions/runs/37226173344) passed for commit `74f470e`, validating migrations, seed, lint, types, tests and production build with PostgreSQL 17 and Node 24. Vercel project creation returned `repo_not_found`; repository access and hosted database setup remain required. The default cron schedule is daily to support the connected Hobby plan.
