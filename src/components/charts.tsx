@@ -38,8 +38,8 @@ export default function TrendChart({
         >
           <defs>
             <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#538565" stopOpacity={0.24} />
-              <stop offset="100%" stopColor="#538565" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.24} />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -59,8 +59,9 @@ export default function TrendChart({
           <Tooltip
             contentStyle={{
               borderRadius: 12,
-              color: "#172b22",
-              border: "1px solid #ddd",
+              color: "var(--text)",
+              background: "var(--panel)",
+              border: "1px solid var(--border)",
             }}
             formatter={(v) =>
               typeof v === "number"
@@ -71,7 +72,7 @@ export default function TrendChart({
           <Area
             type="monotone"
             dataKey={metric}
-            stroke="#538565"
+            stroke="var(--accent)"
             strokeWidth={2.5}
             fill="url(#chartFill)"
           />
@@ -92,7 +93,7 @@ export function ComparisonChart({
           <XAxis type="number" fontSize={11} />
           <YAxis type="category" dataKey="name" width={100} fontSize={11} />
           <Tooltip />
-          <Bar dataKey="revenue" fill="#538565" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="revenue" fill="var(--accent)" radius={[0, 4, 4, 0]} />
           <Bar dataKey="spend" fill="#d2ab63" radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>
