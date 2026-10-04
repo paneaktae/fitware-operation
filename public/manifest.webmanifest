@@ -1,0 +1,16 @@
+{
+  "name": "Fitware Sales & Ads",
+  "short_name": "Fitware",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f7f8f4",
+  "theme_color": "#173d2b",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

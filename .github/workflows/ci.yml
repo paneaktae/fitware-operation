@@ -1,0 +1,39 @@
+name: Validate Fitware
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fitware
+          POSTGRES_PASSWORD: fitware
+          POSTGRES_DB: fitware
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://fitware:fitware@localhost:5432/fitware
+      APP_URL: http://127.0.0.1:3000
+      BETTER_AUTH_SECRET: ci-only-nonproduction-secret-at-least-32-characters
+      ADMIN_EMAIL: owner@fitware.local
+      ADMIN_PASSWORD: ci-only-demo-password-not-for-production
+      DEMO_MODE: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

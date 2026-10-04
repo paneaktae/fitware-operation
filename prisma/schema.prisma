@@ -1,0 +1,305 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum InventoryStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  COMING_SOON
+  SERVICE_REQUIRED
+  HIDDEN
+}
+enum CampaignStatus {
+  DRAFT
+  CREATING
+  PAUSED
+  ACTIVE
+  ERROR
+}
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATION
+  WON
+  LOST
+}
+enum RecommendationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+  EXPIRED
+}
+model User {
+  id String @id
+  name String
+  email String @unique
+  emailVerified Boolean @default(false)
+  image String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions Session[]
+  accounts Account[]
+}
+model Session {
+  id String @id
+  expiresAt DateTime
+  token String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([userId])
+}
+model Account {
+  id String @id
+  accountId String
+  providerId String
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  accessToken String?
+  refreshToken String?
+  idToken String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope String?
+  password String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+model Verification {
+  id String @id
+  identifier String
+  value String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([identifier])
+}
+model InventoryItem {
+  id String @id @default(cuid())
+  brand String
+  model String
+  series String @default("")
+  category String @default("Strength")
+  machineType String @default("Commercial")
+  condition String @default("Refurbished")
+  conditionScore Int @default(90)
+  manufactureYear Int?
+  quantity Int @default(1)
+  reservedQuantity Int @default(0)
+  purchaseCost Int @default(0)
+  askingPrice Int
+  minimumPrice Int @default(0)
+  currency String @default("THB")
+  location String @default("Bangkok warehouse")
+  description String @default("")
+  internalNotes String @default("")
+  status InventoryStatus @default(AVAILABLE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  media InventoryMedia[]
+  campaigns Campaign[]
+  leads Lead[]
+  sales Sale[]
+  recommendations AIRecommendation[]
+  @@index([status,brand])
+}
+model InventoryMedia {
+  id String @id @default(cuid())
+  inventoryItemId String
+  inventoryItem InventoryItem @relation(fields:[inventoryItemId],references:[id],onDelete:Cascade)
+  url String
+  type String
+  alt String @default("")
+  position Int @default(0)
+  createdAt DateTime @default(now())
+  @@index([inventoryItemId,position])
+}
+model Campaign {
+  id String @id @default(cuid())
+  name String
+  inventoryItemId String
+  inventoryItem InventoryItem @relation(fields:[inventoryItemId],references:[id])
+  status CampaignStatus @default(PAUSED)
+  dailyBudget Int
+  goal String @default("Messages")
+  country String @default("TH")
+  language String @default("English")
+  instructions String @default("")
+  audience String
+  destination String
+  primaryText String
+  headline String
+  description String
+  cta String @default("MESSAGE_PAGE")
+  strategy Json?
+  isDemo Boolean @default(true)
+  metaId String? @unique
+  revision Int @default(0)
+  operationKey String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  adSets AdSet[]
+  creatives Creative[]
+  metrics CampaignMetric[]
+  leads Lead[]
+  sales Sale[]
+  recommendations AIRecommendation[]
+  @@index([status,inventoryItemId])
+}
+model AdSet {
+  id String @id @default(cuid())
+  campaignId String
+  campaign Campaign @relation(fields:[campaignId],references:[id],onDelete:Cascade)
+  metaId String? @unique
+  name String
+  status String @default("PAUSED")
+  audience Json
+  ads Ad[]
+  @@index([campaignId])
+}
+model Creative {
+  id String @id @default(cuid())
+  campaignId String
+  campaign Campaign @relation(fields:[campaignId],references:[id],onDelete:Cascade)
+  metaId String? @unique
+  angle String
+  primaryText String
+  headline String
+  description String
+  ads Ad[]
+  @@index([campaignId])
+}
+model Ad {
+  id String @id @default(cuid())
+  adSetId String
+  adSet AdSet @relation(fields:[adSetId],references:[id],onDelete:Cascade)
+  creativeId String
+  creative Creative @relation(fields:[creativeId],references:[id])
+  metaId String? @unique
+  name String
+  status String @default("PAUSED")
+  @@index([adSetId])
+}
+model CampaignMetric {
+  id String @id @default(cuid())
+  campaignId String
+  campaign Campaign @relation(fields:[campaignId],references:[id],onDelete:Cascade)
+  date DateTime @db.Date
+  spend Int @default(0)
+  impressions Int @default(0)
+  reach Int @default(0)
+  clicks Int @default(0)
+  messages Int @default(0)
+  platformLeads Int @default(0)
+  @@unique([campaignId,date])
+  @@index([date])
+}
+model Lead {
+  id String @id @default(cuid())
+  name String
+  phone String @default("")
+  email String @default("")
+  messengerId String?
+  source String @default("Facebook Ads")
+  campaignId String?
+  campaign Campaign? @relation(fields:[campaignId],references:[id])
+  adId String?
+  inventoryItemId String
+  inventoryItem InventoryItem @relation(fields:[inventoryItemId],references:[id])
+  status LeadStatus @default(NEW)
+  notes String @default("")
+  estimatedValue Int @default(0)
+  actualRevenue Int @default(0)
+  lossReason String @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastContactedAt DateTime?
+  qualifiedAt DateTime?
+  events LeadEvent[]
+  sale Sale?
+  @@index([status,createdAt])
+  @@index([campaignId,inventoryItemId])
+}
+model LeadEvent {
+  id String @id @default(cuid())
+  leadId String
+  lead Lead @relation(fields:[leadId],references:[id],onDelete:Cascade)
+  type String
+  message String
+  createdAt DateTime @default(now())
+  @@index([leadId,createdAt])
+}
+model Sale {
+  id String @id @default(cuid())
+  leadId String @unique
+  lead Lead @relation(fields:[leadId],references:[id])
+  inventoryItemId String
+  inventoryItem InventoryItem @relation(fields:[inventoryItemId],references:[id])
+  campaignId String?
+  campaign Campaign? @relation(fields:[campaignId],references:[id])
+  adId String?
+  revenue Int
+  quantity Int @default(1)
+  soldAt DateTime @default(now())
+  @@index([soldAt,campaignId])
+}
+model AIRecommendation {
+  id String @id @default(cuid())
+  type String
+  title String
+  description String
+  reason String
+  campaignId String?
+  campaign Campaign? @relation(fields:[campaignId],references:[id])
+  inventoryItemId String?
+  inventoryItem InventoryItem? @relation(fields:[inventoryItemId],references:[id])
+  currentValue Int?
+  recommendedValue Int?
+  status RecommendationStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  approvedAt DateTime?
+  executedAt DateTime?
+  expiresAt DateTime
+  @@index([status,expiresAt])
+}
+model AuditLog {
+  id String @id @default(cuid())
+  actor String
+  action String
+  entity String
+  entityId String
+  before Json?
+  after Json?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([entity,entityId])
+}
+model Integration {
+  id String @id
+  status String @default("DISCONNECTED")
+  lastSync DateTime?
+  lastError String?
+  syncLeaseUntil DateTime?
+}
+model AppSetting {
+  id String @id @default("business")
+  companyName String @default("Fitware Used")
+  currency String @default("THB")
+  timezone String @default("Asia/Bangkok")
+  defaultCountry String @default("TH")
+}
+model RateLimit {
+  id String @id @default(cuid())
+  key String @unique
+  count Int
+  lastRequest BigInt
+}
